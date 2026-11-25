@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#05060a">
+<title>IPA 图标工坊</title>
+<style>
+:root{
+  --ink:#f4f5f8;
+  --ink-2:rgba(244,245,248,.62);
+  --ink-3:rgba(244,245,248,.34);
+  --glass:linear-gradient(158deg,rgba(255,255,255,.16),rgba(255,255,255,.045) 42%,rgba(255,255,255,.07));
+  --glass-2:linear-gradient(158deg,rgba(255,255,255,.10),rgba(255,255,255,.03));
+  --line:rgba(255,255,255,.16);
+  --line-2:rgba(255,255,255,.08);
+  --accent:#0a8ffd;
+  --accent-2:#7b5cff;
+  --ok:#32d74b;
+  --danger:#ff453a;
+  --r-lg:28px;
+  --r-md:20px;
+  --r-sm:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro SC","PingFang SC","Helvetica Neue",sans-serif;
+  color:var(--ink);
+  background:#05060a;
+  min-height:100vh;
+  padding:calc(env(safe-area-inset-top) + 22px) 18px calc(env(safe-area-inset-bottom) + 34px);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== 背景：流动光斑 ===== */
+.bg{position:fixed;inset:-20%;z-index:-2;filter:blur(70px) saturate(150%);opacity:.9}
+.bg i{position:absolute;display:block;border-radius:50%;mix-blend-mode:screen;animation:float 18s ease-in-out infinite}
+.bg i:nth-child(1){width:58vw;height:58vw;left:-12vw;top:-8vw;background:radial-gradient(circle at 30% 30%,#0a8ffd,transparent 68%)}
+.bg i:nth-child(2){width:52vw;height:52vw;right:-14vw;top:12vh;background:radial-gradient(circle at 40% 40%,#7b5cff,transparent 68%);animation-delay:-6s}
+.bg i:nth-child(3){width:60vw;height:60vw;left:8vw;bottom:-18vh;background:radial-gradient(circle at 50% 50%,#00d6c2,transparent 70%);animation-delay:-11s;opacity:.75}
+.bg i:nth-child(4){width:40vw;height:40vw;right:6vw;bottom:2vh;background:radial-gradient(circle at 50% 50%,#ff5fa2,transparent 70%);animation-delay:-3s;opacity:.5}
+@keyframes float{
+  0%,100%{transform:translate3d(0,0,0) scale(1)}
+  33%{transform:translate3d(6vw,-5vh,0) scale(1.12)}
+  66%{transform:translate3d(-5vw,4vh,0) scale(.94)}
+}
+/* 细颗粒，玻璃更像真材质 */
+.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.055;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+}
+
+/* ===== 玻璃基类 ===== */
+.glass{
+  position:relative;
+  background:var(--glass);
+  border:1px solid var(--line);
+  border-radius:var(--r-lg);
+  backdrop-filter:blur(30px) saturate(190%);
+  -webkit-backdrop-filter:blur(30px) saturate(190%);
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.42),
+    0 2px 8px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.34),
+    inset 0 -1px 0 rgba(255,255,255,.06),
+    inset 1px 0 0 rgba(255,255,255,.10),
+    inset -1px 0 0 rgba(255,255,255,.06);
+  overflow:hidden;
+  isolation:isolate;
+}
+.glass::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:
+    radial-gradient(120% 80% at 12% -10%,rgba(255,255,255,.30),rgba(255,255,255,0) 42%),
+    radial-gradient(90% 70% at 92% 118%,rgba(255,255,255,.12),rgba(255,255,255,0) 46%);
+  mix-blend-mode:screen;opacity:.85;
+}
+
+/* ===== 头部 ===== */
+header{max-width:620px;margin:0 auto 16px;display:flex;align-items:center;gap:12px}
+.mark{
+  width:52px;height:52px;border-radius:16px;flex:0 0 52px;
+  background:linear-gradient(150deg,rgba(255,255,255,.34),rgba(255,255,255,.08));
+  border:1px solid var(--line);
+  display:grid;place-items:center;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 10px 24px rgba(0,0,0,.35);
+  font-size:24px;
+}
+h1{font-size:23px;letter-spacing:-.4px;font-weight:700}
+header p{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+
+main{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+/* ===== 拖放区 ===== */
+.drop{
+  padding:38px 22px;text-align:center;cursor:pointer;
+  transition:transform .35s cubic-bezier(.34,1.4,.64,1),box-shadow .35s ease,background .35s;
+}
+.drop:active{transform:scale(.985)}
+.drop.over{
+  background:linear-gradient(158deg,rgba(10,143,253,.34),rgba(123,92,255,.20));
+  box-shadow:0 24px 70px rgba(10,143,253,.35),inset 0 1px 0 rgba(255,255,255,.5);
+  transform:scale(1.012);
+}
+.drop .ico{
+  width:76px;height:76px;margin:0 auto 16px;border-radius:24px;
+  background:linear-gradient(150deg,rgba(255,255,255,.26),rgba(255,255,255,.06));
+  border:1px solid var(--line);display:grid;place-items:center;font-size:34px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 14px 30px rgba(0,0,0,.3);
+}
+.drop b{display:block;font-size:16px;margin-bottom:6px}
+.drop span{font-size:12.5px;color:var(--ink-2)}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;margin-top:14px;
+  padding:9px 18px;border-radius:999px;font-size:13px;font-weight:600;
+  background:linear-gradient(150deg,rgba(255,255,255,.26),rgba(255,255,255,.09));
+  border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 20px rgba(0,0,0,.28);
+}
+
+/* ===== 应用卡片 ===== */
+.card{padding:18px}
+.row{display:flex;gap:14px;align-items:center}
+.appicon{
+  width:72px;height:72px;border-radius:19px;flex:0 0 72px;object-fit:cover;
+  background:rgba(255,255,255,.08);
+  border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 12px 26px rgba(0,0,0,.4);
+}
+.meta{min-width:0;flex:1}
+.meta h2{font-size:17px;font-weight:650;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .sub{font-size:12px;color:var(--ink-2);margin-top:3px;word-break:break-all}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.kv{
+  padding:11px 13px;border-radius:var(--r-sm);
+  background:var(--glass-2);border:1px solid var(--line-2);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18);
+}
+.kv em{display:block;font-style:normal;font-size:10.5px;color:var(--ink-3);letter-spacing:.4px;text-transform:uppercase}
+.kv span{display:block;font-size:13px;margin-top:4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== 按钮 ===== */
+.actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.btn{
+  flex:1 1 auto;min-width:132px;
+  border:1px solid var(--line);border-radius:var(--r-sm);
+  padding:13px 16px;font-size:14px;font-weight:650;font-family:inherit;
+  color:var(--ink);cursor:pointer;
+  background:linear-gradient(150deg,rgba(255,255,255,.24),rgba(255,255,255,.07));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 10px 24px rgba(0,0,0,.28);
+  transition:transform .18s cubic-bezier(.34,1.5,.64,1),filter .2s,box-shadow .2s;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn:active{transform:scale(.96);filter:brightness(1.15)}
+.btn[disabled]{opacity:.45;pointer-events:none}
+.btn.primary{
+  background:linear-gradient(150deg,#3aa9ff,#0a74e8 55%,#6a4bff);
+  border-color:rgba(255,255,255,.34);
+  box-shadow:0 14px 34px rgba(10,143,253,.42),inset 0 1px 0 rgba(255,255,255,.55);
+  color:#fff;
+}
+.btn.ghost{background:var(--glass-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.btn.danger{background:linear-gradient(150deg,rgba(255,69,58,.42),rgba(255,69,58,.16));border-color:rgba(255,120,110,.4)}
+
+/* ===== 图标预览区 ===== */
+.preview{display:flex;align-items:center;gap:16px;margin-top:16px;flex-wrap:wrap}
+.slot{
+  width:88px;height:88px;border-radius:23px;flex:0 0 88px;
+  background:
+    linear-gradient(150deg,rgba(255,255,255,.18),rgba(255,255,255,.04)),
+    repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 8px,transparent 8px 16px);
+  border:1px dashed rgba(255,255,255,.28);
+  display:grid;place-items:center;overflow:hidden;font-size:26px;color:var(--ink-3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3);
+}
+.slot img{width:100%;height:100%;object-fit:cover}
+.slot.filled{border-style:solid;border-color:rgba(255,255,255,.35)}
+.hint{font-size:12px;color:var(--ink-2);line-height:1.55;flex:1;min-width:170px}
+
+/* ===== 文件列表 ===== */
+details.glass{padding:0}
+details.glass summary{
+  list-style:none;cursor:pointer;padding:15px 18px;font-size:13.5px;font-weight:600;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+details.glass summary::-webkit-details-marker{display:none}
+details.glass summary .cnt{font-weight:500;color:var(--ink-3);font-size:12px}
+.files{max-height:240px;overflow:auto;padding:0 18px 16px;font-size:12px;color:var(--ink-2);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.files div{padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;gap:10px}
+.files div:last-child{border-bottom:0}
+.files .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.files .sz{flex:0 0 auto;color:var(--ink-3)}
+.files .hit{color:#7fd3ff}
+
+/* ===== 弹窗 ===== */
+.backdrop{
+  position:fixed;inset:0;z-index:60;
+  background:rgba(4,6,12,.5);
+  backdrop-filter:blur(14px) saturate(140%);
+  -webkit-backdrop-filter:blur(14px) saturate(140%);
+  display:grid;place-items:center;padding:22px;
+  opacity:0;pointer-events:none;transition:opacity .3s ease;
+}
+.backdrop.show{opacity:1;pointer-events:auto}
+.dialog{
+  width:100%;max-width:352px;padding:24px 22px 18px;text-align:center;
+  transform:translateY(18px) scale(.94);opacity:0;
+  transition:transform .42s cubic-bezier(.34,1.45,.64,1),opacity .3s ease;
+}
+.backdrop.show .dialog{transform:none;opacity:1}
+.dialog .dico{
+  width:60px;height:60px;margin:0 auto 14px;border-radius:19px;
+  display:grid;place-items:center;font-size:27px;
+  background:linear-gradient(150deg,rgba(255,255,255,.30),rgba(255,255,255,.08));
+  border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 12px 28px rgba(0,0,0,.35);
+}
+.dialog h3{font-size:17.5px;font-weight:700;letter-spacing:-.2px}
+.dialog p{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.6}
+.dialog .close-x{
+  position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;
+  display:grid;place-items:center;font-size:14px;color:var(--ink-2);
+  background:rgba(255,255,255,.10);border:1px solid var(--line-2);cursor:pointer;
+}
+.dialog .btns{display:flex;gap:9px;margin-top:20px}
+.dialog .btns .btn{min-width:0;padding:12px 8px;font-size:14px}
+
+/* ===== 状态条 ===== */
+.toast{
+  position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px);
+  transform:translate(-50%,26px);z-index:70;
+  padding:12px 20px;border-radius:999px;font-size:13px;font-weight:600;
+  background:linear-gradient(150deg,rgba(255,255,255,.26),rgba(255,255,255,.10));
+  border:1px solid var(--line);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 16px 36px rgba(0,0,0,.45);
+  opacity:0;pointer-events:none;transition:opacity .25s,transform .35s cubic-bezier(.34,1.5,.64,1);
+  white-space:nowrap;max-width:88vw;overflow:hidden;text-overflow:ellipsis;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-color-scheme:light){
+  :root{
+    --ink:#10131a;
+    --ink-2:rgba(16,19,26,.62);
+    --ink-3:rgba(16,19,26,.40);
+    --glass:linear-gradient(158deg,rgba(255,255,255,.72),rgba(255,255,255,.42) 45%,rgba(255,255,255,.55));
+    --glass-2:linear-gradient(158deg,rgba(255,255,255,.62),rgba(255,255,255,.34));
+    --line:rgba(255,255,255,.85);
+    --line-2:rgba(16,19,26,.06);
+  }
+  body{background:#eef1f6}
+  .bg{opacity:.55}
+  .grain{opacity:.035}
+  .backdrop{background:rgba(228,232,240,.5)}
+  .files div{border-bottom-color:rgba(16,19,26,.06)}
+}
+</style>
+</head>
+<body>
+<div class="bg"><i></i><i></i><i></i><i></i></div>
+<div class="grain"></div>
+
+<header>
+  <div class="mark">🪄</div>
+  <div>
+    <h1>IPA 图标工坊</h1>
+    <p>导入 IPA → 换图标 → 导出，全部在本机完成</p>
+  </div>
+</header>
+
+<main>
+  <section class="glass drop" id="drop">
+    <div class="ico">📦</div>
+    <b>把一个 IPA 或 ZIP 拖进来</b>
+    <span>也可以点这里从「文件」里选</span>
+    <div class="pill">选择文件</div>
+    <input type="file" id="picker" accept=".ipa,.zip,application/zip,application/octet-stream" hidden>
+  </section>
+
+  <section class="glass card" id="card" hidden>
+    <div class="row">
+      <img class="appicon" id="appIcon" alt="">
+      <div class="meta">
+        <h2 id="appName">—</h2>
+        <div class="sub" id="appBundle">—</div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="kv"><em>版本</em><span id="appVer">—</span></div>
+      <div class="kv"><em>最低系统</em><span id="appMin">—</span></div>
+      <div class="kv"><em>文件数</em><span id="appFiles">—</span></div>
+      <div class="kv"><em>体积</em><span id="appSize">—</span></div>
+    </div>
+
+    <div class="preview">
+      <div class="slot" id="newSlot">＋</div>
+      <div class="hint" id="newHint">选一张正方形图片当新图标，会自动生成包里所有尺寸的图标文件。1024×1024 最好。</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn ghost" id="pickIcon">选择新图标</button>
+      <button class="btn primary" id="exportBtn" disabled>导出 IPA</button>
+    </div>
+    <div class="actions">
+      <button class="btn danger" id="resetBtn">移除这个文件</button>
+    </div>
+    <input type="file" id="iconPicker" accept="image/*" hidden>
+  </section>
+
+  <details class="glass" id="filesBox" hidden>
+    <summary>包内文件 <span class="cnt" id="filesCnt"></span></summary>
+    <div class="files" id="filesList"></div>
+  </details>
+</main>
+
+<!-- 每次进入都问一次 -->
+<div class="backdrop" id="askBackdrop">
+  <div class="glass dialog" id="askDialog">
+    <div class="close-x" id="askX">✕</div>
+    <div class="dico">🗂</div>
+    <h3>是否关闭这个文件？</h3>
+    <p id="askText">当前没有打开的文件。关闭后会回到导入界面。</p>
+    <div class="btns">
+      <button class="btn ghost" id="askNo">不关闭</button>
+      <button class="btn primary" id="askYes">关闭文件</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = {
+    entries: null,      // [{name, data:Uint8Array, method}]
+    icons: [],          // 索引
+    newIconBlob: null,
+    newIconImg: null,
+    fileName: ''
+  };
+
+  /* ---------- 工具 ---------- */
+  function toast(msg, ms) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tid);
+    t._tid = setTimeout(function () { t.classList.remove('show'); }, ms || 2200);
+  }
+  function fmtSize(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1024 / 1024).toFixed(2) + ' MB';
+  }
+  function bytes(n) {
+    var a = new Uint8Array(n);
+    return a;
+  }
+
+  /* ---------- CRC32 ---------- */
+  var CRC_TABLE = (function () {
+    var t = new Uint32Array(256);
+    for (var i = 0; i < 256; i++) {
+      var c = i;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[i] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(u8) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < u8.length; i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  /* ---------- 读 ZIP ---------- */
+  async function inflateRaw(u8) {
+    if (typeof DecompressionStream === 'undefined') {
+      throw new Error('这个浏览器不支持解压，请用 iOS 16.4 以上的 Safari');
+    }
+    var ds = new DecompressionStream('deflate-raw');
+    var stream = new Blob([u8]).stream().pipeThrough(ds);
+    var buf = await new Response(stream).arrayBuffer();
+    return new Uint8Array(buf);
+  }
+
+  function u16(dv, o) { return dv.getUint16(o, true); }
+  function u32(dv, o) { return dv.getUint32(o, true); }
+
+  async function readZip(buf) {
+    var dv = new DataView(buf);
+    var eocd = -1;
+    for (var i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 65558); i--) {
+      if (u32(dv, i) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('不是有效的 ZIP / IPA 文件');
+    var count = u16(dv, eocd + 10);
+    var cdOff = u32(dv, eocd + 16);
+
+    var entries = [];
+    var p = cdOff;
+    for (var n = 0; n < count; n++) {
+      if (u32(dv, p) !== 0x02014b50) break;
+      var method = u16(dv, p + 10);
+      var csize = u32(dv, p + 20);
+      var usize = u32(dv, p + 24);
+      var nlen = u16(dv, p + 28);
+      var elen = u16(dv, p + 30);
+      var clen = u16(dv, p + 32);
+      var lho = u32(dv, p + 42);
+      var nameBytes = new Uint8Array(buf, p + 46, nlen);
+      var name = new TextDecoder('utf-8').decode(nameBytes);
+
+      var lnlen = u16(dv, lho + 26);
+      var lelen = u16(dv, lho + 28);
+      var dataStart = lho + 30 + lnlen + lelen;
+      var raw = new Uint8Array(buf, dataStart, csize);
+      entries.push({ name: name, method: method, csize: csize, usize: usize, raw: raw, data: null });
+      p += 46 + nlen + elen + clen;
+    }
+    return entries;
+  }
+
+  async function materialize(entries) {
+    var out = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+      if (e.method === 0) {
+        e.data = e.raw;
+      } else if (e.method === 8) {
+        e.data = await inflateRaw(e.raw);
+      } else {
+        e.data = new Uint8Array(0);
+      }
+      out += e.data.length;
+    }
+    return out;
+  }
+
+  /* ---------- 写 ZIP（store 方式，无损） ---------- */
+  function writeZip(entries) {
+    var parts = [];
+    var central = [];
+    var offset = 0;
+    var enc = new TextEncoder();
+
+    entries.forEach(function (e) {
+      var nameBytes = enc.encode(e.name);
+      var data = e.data || new Uint8Array(0);
+      var crc = crc32(data);
+
+      var lh = new Uint8Array(30 + nameBytes.length);
+      var dv = new DataView(lh.buffer);
+      dv.setUint32(0, 0x04034b50, true);
+      dv.setUint16(4, 20, true);
+      dv.setUint16(6, 0x0800, true);   // UTF-8 文件名
+      dv.setUint16(8, 0, true);        // store
+      dv.setUint16(10, 0, true);
+      dv.setUint16(12, 0, true);
+      dv.setUint32(14, crc, true);
+      dv.setUint32(18, data.length, true);
+      dv.setUint32(22, data.length, true);
+      dv.setUint16(26, nameBytes.length, true);
+      dv.setUint16(28, 0, true);
+      lh.set(nameBytes, 30);
+
+      parts.push(lh, data);
+
+      var ch = new Uint8Array(46 + nameBytes.length);
+      var cv = new DataView(ch.buffer);
+      cv.setUint32(0, 0x02014b50, true);
+      cv.setUint16(4, 20, true);
+      cv.setUint16(6, 20, true);
+      cv.setUint16(8, 0x0800, true);
+      cv.setUint16(10, 0, true);
+      cv.setUint16(12, 0, true);
+      cv.setUint16(14, 0, true);
+      cv.setUint32(16, crc, true);
+      cv.setUint32(20, data.length, true);
+      cv.setUint32(24, data.length, true);
+      cv.setUint16(28, nameBytes.length, true);
+      cv.setUint16(30, 0, true);
+      cv.setUint16(32, 0, true);
+      cv.setUint16(34, 0, true);
+      cv.setUint16(36, 0, true);
+      cv.setUint32(38, 0, true);
+      cv.setUint32(42, offset, true);
+      ch.set(nameBytes, 46);
+      central.push(ch);
+
+      offset += lh.length + data.length;
+    });
+
+    var cdSize = central.reduce(function (a, b) { return a + b.length; }, 0);
+    var eocd = new Uint8Array(22);
+    var ev = new DataView(eocd.buffer);
+    ev.setUint32(0, 0x06054b50, true);
+    ev.setUint16(8, entries.length, true);
+    ev.setUint16(10, entries.length, true);
+    ev.setUint32(12, cdSize, true);
+    ev.setUint32(16, offset, true);
+
+    return new Blob(parts.concat(central, [eocd]), { type: 'application/octet-stream' });
+  }
+
+  /* ---------- 二进制 plist（只取几个键） ---------- */
+  function parseBplist(u8) {
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    var enc = new TextDecoder('utf-8');
+    var trailer = u8.length - 32;
+    var offSize = u8[trailer + 6];
+    var refSize = u8[trailer + 7];
+    var numObj = Number(dv.getBigUint64(trailer + 8));
+    var topObj = Number(dv.getBigUint64(trailer + 16));
+    var objTableOff = Number(dv.getBigUint64(trailer + 24));
+
+    function readUInt(o, size) {
+      if (size === 1) return dv.getUint8(o);
+      if (size === 2) return dv.getUint16(o);
+      if (size === 4) return dv.getUint32(o);
+      return Number(dv.getBigUint64(o));
+    }
+    function objOffset(ref) { return readUInt(objTableOff + ref * offSize, offSize); }
+
+    function readObj(ref, depth) {
+      if (depth > 40) return null;
+      var o = objOffset(ref);
+      var marker = dv.getUint8(o);
+      var type = marker >> 4;
+      var info = marker & 0x0F;
+      var p = o + 1;
+
+      if (type === 0x0) {
+        if (info === 0x8) return false;
+        if (info === 0x9) return true;
+        return null;
+      }
+      if (type === 0x1) {
+        var nbytes = 1 << info;
+        var v = readUInt(p, nbytes);
+        if (nbytes === 8) {
+          var hi = dv.getUint32(p), lo = dv.getUint32(p + 4);
+          return hi * 4294967296 + lo;
+        }
+        return v;
+      }
+      if (type === 0x2) {
+        if (info === 2) return dv.getFloat32(p);
+        return dv.getFloat64(p);
+      }
+      if (type === 0x3) { return new Date(978307200000 + dv.getFloat64(p) * 1000); }
+      if (type === 0x5) {
+        var len = info;
+        if (info === 0x0F) {
+          var ni = dv.getUint8(p); p += 1;
+          len = readUInt(p, 1 << (ni & 0x0F)); p += (1 << (ni & 0x0F));
+        }
+        return enc.decode(u8.subarray(p, p + len));
+      }
+      if (type === 0x6) {
+        var l2 = info;
+        if (info === 0x0F) {
+          var ni2 = dv.getUint8(p); p += 1;
+          l2 = readUInt(p, 1 << (ni2 & 0x0F)); p += (1 << (ni2 & 0x0F));
+        }
+        var s = '';
+        for (var i = 0; i < l2; i++) s += String.fromCharCode(dv.getUint16(p + i * 2));
+        return s;
+      }
+      if (type === 0x4) {
+        var l3 = info;
+        if (info === 0x0F) {
+          var ni3 = dv.getUint8(p); p += 1;
+          l3 = readUInt(p, 1 << (ni3 & 0x0F)); p += (1 << (ni3 & 0x0F));
+        }
+        return u8.subarray(p, p + l3);
+      }
+      if (type === 0xA || type === 0xC) {
+        var l4 = info;
+        if (info === 0x0F) {
+          var ni4 = dv.getUint8(p); p += 1;
+          l4 = readUInt(p, 1 << (ni4 & 0x0F)); p += (1 << (ni4 & 0x0F));
+        }
+        var arr = [];
+        for (var j = 0; j < l4; j++) arr.push(readObj(readUInt(p + j * refSize, refSize), depth + 1));
+        return arr;
+      }
+      if (type === 0xD) {
+        var l5 = info;
+        if (info === 0x0F) {
+          var ni5 = dv.getUint8(p); p += 1;
+          l5 = readUInt(p, 1 << (ni5 & 0x0F)); p += (1 << (ni5 & 0x0F));
+        }
+        var dict = {};
+        for (var k = 0; k < l5; k++) {
+          var keyRef = readUInt(p + k * refSize, refSize);
+          var valRef = readUInt(p + (l5 + k) * refSize, refSize);
+          dict[readObj(keyRef, depth + 1)] = readObj(valRef, depth + 1);
+        }
+        return dict;
+      }
+      return null;
+    }
+    return readObj(topObj, 0);
+  }
+
+  // 兼容两种包结构：Payload/Xxx.app/… 和 Xxx.app/…（顶层直接是 .app）
+  function appPrefix(entries) {
+    for (var i = 0; i < entries.length; i++) {
+      var m = entries[i].name.match(/^(?:Payload\/)?([^/]+\.app)\//);
+      if (m) return { prefix: m[1] + '/', hasPayload: entries[i].name.indexOf('Payload/') === 0 };
+    }
+    return null;
+  }
+
+  function readInfoPlist(entries) {
+    var ap = appPrefix(entries);
+    if (!ap) return null;
+    var target = ap.hasPayload ? 'Payload/' + ap.prefix + 'Info.plist' : ap.prefix + 'Info.plist';
+    var info = entries.find(function (e) { return e.name === target; });
+    if (!info || !info.data) return null;
+    var text = null;
+    try { text = new TextDecoder('utf-8').decode(info.data); } catch (e) {}
+    if (text && text.indexOf('<?xml') >= 0) {
+      try {
+        var doc = new DOMParser().parseFromString(text, 'application/xml');
+        var top = doc.querySelector('plist > dict');
+        var out = {};
+        var kids = top ? top.children : [];
+        for (var i = 0; i < kids.length; i += 2) {
+          var k = kids[i].textContent.trim();
+          var v = kids[i + 1];
+          if (!v) continue;
+          out[k] = v.textContent.trim();
+        }
+        return out;
+      } catch (e) { return null; }
+    }
+    try { return parseBplist(info.data); } catch (e) { return null; }
+  }
+
+  /* ---------- 图标识别 ---------- */
+  function iconIndexes(entries) {
+    var ap = appPrefix(entries);
+    if (!ap) return [];
+    var appRoot = (ap.hasPayload ? 'Payload/' : '') + ap.prefix;
+    var out = [];
+    entries.forEach(function (e, i) {
+      var n = e.name;
+      var base = n.split('/').pop();
+      // iTunesArtwork 在包根目录
+      if (/^iTunesArtwork/i.test(base) && n.indexOf('/') < 0) { out.push(i); return; }
+      if (n.indexOf(appRoot) !== 0) return;
+      if (!/\.png$/i.test(n)) return;
+      var inRoot = n.slice(appRoot.length).indexOf('/') < 0;
+      var isRootIcon = inRoot && /^icon(@2x|@3x)?\.png$/i.test(base);
+      var isIcon = /^AppIcon[^/]*\.png$/i.test(base) || isRootIcon;
+      if (isIcon) out.push(i);
+    });
+    return out;
+  }
+
+  function pickMainIcon(entries, idx) {
+    if (!idx.length) return null;
+    // 优先 1024 或最大的 AppIcon
+    var best = null, bestScore = -1;
+    for (var i = 0; i < idx.length; i++) {
+      var e = entries[idx[i]];
+      var score = e.data ? e.data.length : 0;
+      if (/AppIcon1024|AppIcon@3x/i.test(e.name)) score += 100000000;
+      if (score > bestScore) { bestScore = score; best = idx[i]; }
+    }
+    return best;
+  }
+
+  /* ---------- 图片处理 ---------- */
+  function loadImage(blob) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(blob);
+      var img = new Image();
+      img.onload = function () { res(img); };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('图片读不出来')); };
+      img.src = url;
+    });
+  }
+
+  function drawIcon(img, size) {
+    var canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    // 覆盖式铺满，居中裁切
+    var s = Math.max(size / img.width, size / img.height);
+    var w = img.width * s, h = img.height * s;
+    ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+    return new Promise(function (res) {
+      canvas.toBlob(function (b) { res(b); }, 'image/png');
+    });
+  }
+
+  async function blobToU8(blob) {
+    return new Uint8Array(await blob.arrayBuffer());
+  }
+
+  /* ---------- 主流程 ---------- */
+  async function loadFile(file) {
+    if (!file) return;
+    toast('正在解析…', 6000);
+    try {
+      var buf = await file.arrayBuffer();
+      var entries = await readZip(buf);
+      if (!entries.length) throw new Error('包里没有文件');
+      await materialize(entries);
+      state.entries = entries;
+      state.fileName = file.name || 'app.ipa';
+      state.icons = iconIndexes(entries);
+      state.newIconBlob = null;
+      state.newIconImg = null;
+
+      var plist = readInfoPlist(entries);
+      var ap = appPrefix(entries);
+      var bundleName = ap ? ap.prefix.replace(/\.app\/$/, '') : '';
+
+      var total = entries.reduce(function (a, e) { return a + (e.data ? e.data.length : 0); }, 0);
+      $('appName').textContent = (plist && (plist.CFBundleDisplayName || plist.CFBundleName)) || bundleName || '未知应用';
+      $('appBundle').textContent = (plist && plist.CFBundleIdentifier) || '—';
+      $('appVer').textContent = (plist && plist.CFBundleShortVersionString) || '—';
+      $('appMin').textContent = (plist && plist.MinimumOSVersion) ? 'iOS ' + plist.MinimumOSVersion : '—';
+      $('appFiles').textContent = entries.length + ' 个';
+      $('appSize').textContent = fmtSize(total);
+
+      // 主图标预览
+      var mainIdx = pickMainIcon(entries, state.icons);
+      if (mainIdx != null) {
+        var d = entries[mainIdx].data;
+        if (d && d.length) {
+          $('appIcon').src = URL.createObjectURL(new Blob([d], { type: 'image/png' }));
+        } else { $('appIcon').removeAttribute('src'); }
+      } else {
+        $('appIcon').removeAttribute('src');
+      }
+
+      // 文件列表
+      var list = $('filesList');
+      list.innerHTML = '';
+      entries.forEach(function (e, idx) {
+        var row = document.createElement('div');
+        var nm = document.createElement('span');
+        nm.className = 'n' + (state.icons.indexOf(idx) >= 0 ? ' hit' : '');
+        nm.textContent = e.name;
+        var sz = document.createElement('span');
+        sz.className = 'sz';
+        sz.textContent = fmtSize(e.data ? e.data.length : 0);
+        row.appendChild(nm); row.appendChild(sz);
+        list.appendChild(row);
+      });
+      $('filesCnt').textContent = entries.length + ' 个 · 图标 ' + state.icons.length + ' 个';
+      $('filesBox').hidden = false;
+
+      $('card').hidden = false;
+      $('drop').hidden = true;
+      $('exportBtn').disabled = true;
+      resetInstallSlot(false);
+      toast('已载入 ' + entries.length + ' 个文件');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error(err);
+      toast('打不开：' + (err && err.message ? err.message : err), 4000);
+    }
+  }
+
+  function resetInstallSlot(clearBlob) {
+    var slot = $('newSlot');
+    slot.className = 'slot';
+    slot.innerHTML = '＋';
+    $('newHint').textContent = '选一张正方形图片当新图标，会自动生成包里所有尺寸的图标文件。1024×1024 最好。';
+    if (clearBlob) { state.newIconBlob = null; state.newIconImg = null; }
+    $('exportBtn').disabled = !state.newIconBlob;
+  }
+
+  async function pickNewIcon(file) {
+    if (!file) return;
+    try {
+      var img = await loadImage(file);
+      state.newIconBlob = file;
+      state.newIconImg = img;
+      var slot = $('newSlot');
+      slot.className = 'slot filled';
+      slot.innerHTML = '';
+      var im = document.createElement('img');
+      im.src = URL.createObjectURL(file);
+      slot.appendChild(im);
+      $('newHint').textContent = '新图标 ' + img.width + '×' + img.height + '，点「导出 IPA」会在包里生成 ' + state.icons.length + ' 个尺寸。';
+      $('exportBtn').disabled = false;
+    } catch (e) {
+      toast('图片读不出来');
+    }
+  }
+
+  async function exportIpa() {
+    if (!state.entries || !state.newIconImg) return;
+    $('exportBtn').disabled = true;
+    toast('正在生成图标…', 8000);
+    try {
+      var entries = state.entries;
+      var idxs = state.icons.slice();
+      var replaced = 0;
+      var big = state.newIconImg;
+
+      // 每个尺寸按原图尺寸重绘
+      var sizes = [];
+      for (var i = 0; i < idxs.length; i++) {
+        var e = entries[idxs[i]];
+        var size = 0;
+        if (e.data && e.data.length) {
+          try {
+            var bmp = await createImageBitmap(new Blob([e.data], { type: 'image/png' }));
+            size = Math.max(bmp.width, bmp.height);
+            bmp.close && bmp.close();
+          } catch (err) { size = 0; }
+        }
+        if (!size) {
+          var mb = e.name.match(/(\d+)x\1/);
+          size = mb ? parseInt(mb[1], 10) : 180;
+        }
+        sizes.push(size);
+      }
+
+      for (var j = 0; j < idxs.length; j++) {
+        var target = entries[idxs[j]];
+        var blob = await drawIcon(big, sizes[j]);
+        target.data = await blobToU8(blob);
+        target.method = 0;
+        replaced++;
+      }
+
+      $('appIcon').src = $('newSlot').querySelector('img').src;
+
+      var out = writeZip(entries);
+      var baseName = state.fileName.replace(/\.(ipa|zip)$/i, '');
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(out);
+      a.download = baseName + '-newicon.ipa';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        URL.revokeObjectURL(a.href);
+        a.remove();
+      }, 4000);
+
+      toast('换好了 ' + replaced + ' 个图标，开始下载');
+    } catch (err) {
+      console.error(err);
+      toast('导出失败：' + (err && err.message ? err.message : err), 4000);
+    } finally {
+      $('exportBtn').disabled = false;
+    }
+  }
+
+  /* ---------- 事件 ---------- */
+  $('drop').addEventListener('click', function () { $('picker').click(); });
+  $('picker').addEventListener('change', function (e) {
+    if (e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
+    e.target.value = '';
+  });
+  $('pickIcon').addEventListener('click', function () { $('iconPicker').click(); });
+  $('iconPicker').addEventListener('change', function (e) {
+    if (e.target.files && e.target.files[0]) pickNewIcon(e.target.files[0]);
+    e.target.value = '';
+  });
+  $('exportBtn').addEventListener('click', exportIpa);
+  $('resetBtn').addEventListener('click', function () {
+    state.entries = null; state.icons = []; state.fileName = '';
+    $('card').hidden = true;
+    $('filesBox').hidden = true;
+    $('drop').hidden = false;
+    resetInstallSlot(true);
+    toast('已移除');
+  });
+
+  // 拖放
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      e.preventDefault();
+      if (!state.entries) $('drop').classList.add('over');
+    });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    document.addEventListener(ev, function (e) {
+      e.preventDefault();
+      $('drop').classList.remove('over');
+    });
+  });
+  document.addEventListener('drop', function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (f) loadFile(f);
+  });
+
+  /* ---------- 每次进入的弹窗 ---------- */
+  function openAsk() {
+    $('askText').textContent = state.entries
+      ? '当前打开的是「' + (document.getElementById('appName').textContent || '这个文件') + '」。关闭后会回到导入界面，重新导入即可。'
+      : '当前没有打开的文件。点「不关闭」或者直接关掉这个提示就行。';
+    $('askBackdrop').classList.add('show');
+  }
+  function closeAsk() {
+    $('askBackdrop').classList.remove('show');
+  }
+  $('askYes').addEventListener('click', function () {
+    if (state.entries) {
+      $('resetBtn').click();
+    }
+    closeAsk();
+  });
+  $('askNo').addEventListener('click', closeAsk);
+  $('askX').addEventListener('click', closeAsk);
+  $('askBackdrop').addEventListener('click', function (e) {
+    if (e.target === $('askBackdrop')) closeAsk();   // 点空白处 = 不选择，直接隐藏
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAsk();
+  });
+
+  // 进入页面就弹（稍等过渡）
+  setTimeout(openAsk, 420);
+
+  // 自测入口
+  window.__ipaTool = {
+    readZip: readZip, materialize: materialize, writeZip: writeZip,
+    iconIndexes: iconIndexes, parseBplist: parseBplist, readInfoPlist: readInfoPlist,
+    state: state, loadFile: loadFile
+  };
+
+  // 阻止 iOS 双击缩放
+  var lastTouch = 0;
+  document.addEventListener('touchend', function (e) {
+    var now = Date.now();
+    if (now - lastTouch < 300) e.preventDefault();
+    lastTouch = now;
+  }, { passive: false });
+})();
+</script>
+</body>
+</html>
